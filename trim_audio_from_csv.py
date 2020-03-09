@@ -11,35 +11,46 @@ import shutil
 #outputName = "./output/output.wav"
 
 def trim_and_write( input_file, input_path, output_path, start_trim, end_trim, annotation ) :
+    if(not input_path.exists()) : return
+
     print("[WORKING] Attempting to trim audio file and write to directory")
     # read audio filE
     y1, fs1 = sf.read(input_path)
 
     # get seconds to trim
-    #print(start_trim)
-    #print(end_trim)
     sec_to_trim = numpy.array( [ float(start_trim), float(end_trim) ] )
     # get integer indices into the wav file - careful of end of array reading with a check for greater than y1.shape
     sec_to_trim = numpy.ceil( sec_to_trim *fs1 )
 
     # set start and end, if either is larger than the total file size, set to end of audio file
-    start_read = sec_to_trim[0]
-    end_read = sec_to_trim[1]
-    if start_read >= y1.shape[0] : start_read = y1.shape[0]-1
-    if end_read >= y1.shape[0]   :   end_read = y1.shape[0]-1
+    start = sec_to_trim[0]
+    end = sec_to_trim[1]
 
-    # create output file name
-    random_hex = binascii.b2a_hex(os.urandom(5))
-    output_name = output_path + "\\" + input_file[:-4] + "_" + str(random_hex) + "_" + annotation + ".wav"
+    print(start)
+    print(end)
+    number = 0
+    for index in range(int(start), int(end), fs1):
 
-    # write to output file
-    scipy.io.wavfile.write( output_name, fs1, y1[ int( start_read ) : int( end_read ) ])
-    print("[SUCESS] Wrote new audio file to", output_name)
+        # set start and end seconds reads
+        start_read = index
+        end_read = index + fs1
+
+        if start_read >= y1.shape[0] : start_read = y1.shape[0]-1
+        if end_read >= y1.shape[0]   :   end_read = y1.shape[0]-1
+
+        # create output file name
+        random_hex = binascii.b2a_hex(os.urandom(5))
+        output_name = output_path + "\\" + input_file[:-4] + "_" + str(number) + "_" + annotation + ".wav"
+
+        # write to output file
+        scipy.io.wavfile.write( output_name, fs1, y1[ int( start_read ) : int( end_read ) ])
+        print("[SUCESS] Wrote new audio file to", output_name)
+        number += 1
 
 def create_folders() :
     csv_file = os.path.join( ".\data_collection.csv")
     # location of files
-    existing_path_prefix = "E:\\recordings"
+    existing_path_prefix = "audio_files"
 
     # creates new folder in for location of resulting folders w/ files and sets path
     try:
@@ -73,3 +84,5 @@ def create_folders() :
                     print("CSV row entered incorrectly for ", File_name)
 
 create_folders()
+
+#trim_and_write( "s2lam001_180604_2018-06-09_08-00.wav", "s2lam001_180604_2018-06-09_08-00.wav", ".", 2.3, 10.3, "ATT" )
